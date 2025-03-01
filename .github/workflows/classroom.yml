@@ -1,0 +1,43 @@
+name: Autograding Tests
+'on':
+  - push
+  - workflow_dispatch
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Fetch tests
+      uses: actions/checkout@v4
+      with:
+        repository: ICM0002/search-letter-tests
+        path: temp_tests
+
+    - name: Move test file to root
+      run: |
+        mv temp_tests/test_search_letter.py test_search_letter.py
+        rm -rf temp_tests
+
+    - name: test
+      id: test
+      uses: classroom-resources/autograding-python-grader@v1
+      with:
+        timeout: 10
+        max-score: 10
+        setup-command: ''
+
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TEST_RESULTS: "${{steps.test.outputs.result}}"
+      with:
+        runners: test
